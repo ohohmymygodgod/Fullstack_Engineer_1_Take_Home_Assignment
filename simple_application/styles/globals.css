@@ -1,0 +1,14 @@
+/* * {
+    border: solid;
+    border-color: red;
+} */
+
+input {
+    width: 448px;
+    height: 96px;
+    border-radius: 16px;
+    font-size: 36px;
+    margin: 16px;
+    outline: none;
+    border: none;
+}
