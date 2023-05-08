@@ -58,8 +58,8 @@ const Container = styled.div`
   left: 0;
   right: 0;
   margin: auto;
-  width: 1512px;
-  height: 982px;\
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
