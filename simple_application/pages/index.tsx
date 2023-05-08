@@ -1,26 +1,28 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { ethers, BigNumber } from "ethers";
-// import BigNumber from 'bignumber.js';
 import path from 'path';
 import { promises as fs } from 'fs';
 import 'bootstrap/dist/css/bootstrap.css'
 
-const provider = new ethers.providers.EtherscanProvider('homestead', 'KICQBRWUBNR68JNW8DGI3ZV78SS8J9JHQ1');
 
 export const getStaticProps = async () => {
   const abiDirectory = path.join(process.cwd(), 'abi');
 
-  const usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+  const usdcAddress = process.env.USDC_ADDRESS
   const usdcAbiString = await fs.readFile(abiDirectory + '/USDC_abi.json', 'utf8')
   const usdcAbi = JSON.parse(usdcAbiString);
 
-  const usdtAddress = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+  const usdtAddress = process.env.USDT_ADDRESS
   const usdtAbiString = await fs.readFile(abiDirectory + '/USDT_abi.json', 'utf8')
   const usdtAbi = JSON.parse(usdtAbiString);
 
   return {
     props: {
+      providerInfo: {
+        chain: process.env.CHAIN,
+        apiKey: process.env.ETHERSCAN_API_KEY,
+      },
       usdcContractInfo: {
         address: usdcAddress,
         abi: usdcAbi
@@ -33,12 +35,18 @@ export const getStaticProps = async () => {
   }
 };
 
+interface ProviderInfo {
+  chain: string,
+  apiKey: string,
+}
+
 interface ContractInfo {
   address: string,
   abi: string,
 }
 
-interface ERC20Contract {
+interface Config {
+  providerInfo: ProviderInfo,
   usdcContractInfo: ContractInfo,
   usdtContractInfo: ContractInfo
 }
@@ -116,7 +124,8 @@ const formatUSD = (usd: string) => {
   }
 }
 
-export default function Home({usdcContractInfo, usdtContractInfo}: ERC20Contract) {
+export default function Home({providerInfo, usdcContractInfo, usdtContractInfo}: Config) {
+  const provider = new ethers.providers.EtherscanProvider(providerInfo.chain, providerInfo.apiKey);
   // 0xA9D1e08C7793af67e9d92fe308d5697FB81d3E43
   const [address, setAddress] = useState<string>('');
   const [eth, setEth] = useState<string>('0');
@@ -127,6 +136,14 @@ export default function Home({usdcContractInfo, usdtContractInfo}: ERC20Contract
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if(!ethers.utils.isAddress(address)) {
+      setEth('0')
+      setUsdc('0')
+      setUsdt('0')
+      return
+    }
+
     const balanceInEth = await provider.getBalance(address);
     const balanceInUsdc = await usdcContract.balanceOf(address)
     const balanceInUsdt = await usdtContract.balanceOf(address)
